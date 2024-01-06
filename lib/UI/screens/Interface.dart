@@ -1,4 +1,9 @@
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:invoportapp/UI/screens/pass-code.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../Constance/imgaeasset.dart';
 import '../../Constance/mycolor.dart';
 import '../widgets/ItemCard.dart';
@@ -10,6 +15,8 @@ class Interface extends StatefulWidget {
 }
 
 class _InterfaceState extends State<Interface> {
+  bool isPinSet = false;
+  late SharedPreferences prefs;
   String selectedvalue = "Option 1";
   TextEditingController Investor =TextEditingController();
   TextEditingController Investement =TextEditingController();
@@ -79,24 +86,38 @@ class _InterfaceState extends State<Interface> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 13),
-          child: IconButton(
-            icon: Icon(
-              Icons.format_align_left_sharp,
-              size: 25,
-              color: MyColor.greydark,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 13),
+              child: Image.asset(
+                MyImages.logo,
+                width: MediaQuery.of(context).size.width * 0.4,
+              ),
             ),
-            onPressed: () {
-              scaffoldKey.currentState?.openDrawer();
-            },
-          ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 3),
+              child: IconButton(
+                icon: Icon(
+                  Icons.format_align_left_sharp,
+                  size: 25,
+                  color: MyColor.greydark,
+                ),
+                onPressed: () {
+                  scaffoldKey.currentState?.openDrawer();
+                },
+              ),
+            ),
+
+          ],
         ),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 13),
-          child: Image.asset(
-            MyImages.logo,
-            width: MediaQuery.of(context).size.width * 0.4,
+          child: Icon(
+            Icons.notification_important,color: Colors.blue,
+            size: MediaQuery.of(context).size.width * 0.1,
           ),
         ),
       ],
@@ -179,6 +200,8 @@ class _InterfaceState extends State<Interface> {
           padding: EdgeInsets.only(left: 8.0),
           child: ListView(
             children: [
+              SizedBox(height: 30,),
+
               buildDrawerItem(
                 icon: Icons.paid_outlined,
                 title: 'Buy',
@@ -195,6 +218,9 @@ class _InterfaceState extends State<Interface> {
                 icon: Icons.logout,
                 title: 'Log out',
               ),
+
+
+
             ],
           ),
         ),
@@ -220,4 +246,11 @@ class _InterfaceState extends State<Interface> {
       },
     );
   }
+  void resetPIN() async {
+    await prefs.remove('pin'); // قم بحذف الـ PIN المحفوظ
+    isPinSet = false; // قم بتحديث الحالة للإشارة إلى أن الـ PIN غير معين الآن
+    // قم بتحديث واجهة المستخدم لإظهار التغييرات
+  }
+
+
 }

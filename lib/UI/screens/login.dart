@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../controller/Auth/SignIn_Controller.dart';
+
+import '../../Controller/Auth/SignIn_Controller..dart';
 import '../widgets/CustomHelpText.dart';
 import '../widgets/CustomLoginButton.dart';
 import '../widgets/CustomTextField.dart';
@@ -57,9 +58,9 @@ class LogIn extends StatelessWidget {
                             icon: Icons.password,
                             isPassword: true,
                             obscureText:
-                                bool.parse(controller.obscureText.toString()),
+                            bool.parse(controller.obscureText.toString()),
                             valid: (value) {
-                              if (value!.isEmpty||!value.isNumericOnly) {
+                              if (value!.isEmpty) {
                                 return 'Password is required';
                               }
 

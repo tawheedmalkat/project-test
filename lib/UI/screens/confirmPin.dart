@@ -240,20 +240,32 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'confirmPin.dart';
 import 'enterPIN.dart';
 
-class PasswordScreen extends StatefulWidget {
+class ConfirmPIN extends StatefulWidget {
   @override
-  _PasswordScreenState createState() => _PasswordScreenState();
+  _ConfirmPINState createState() => _ConfirmPINState();
 }
 
-class _PasswordScreenState extends State<PasswordScreen> {
+class _ConfirmPINState extends State<ConfirmPIN> {
+  String enteredPin = Get.arguments ?? "";
   List<TextEditingController> _pinControllers =
-      List.generate(4, (index) => TextEditingController());
+  List.generate(4, (index) => TextEditingController());
+
+  String savedPin = "";
+
+  @override
+  void initState() {
+    super.initState();
+    getSavedPin();
+  }
 
 
+  Future<void> getSavedPin() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    savedPin = prefs.getString('pin') ?? "";
+
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -278,19 +290,18 @@ class _PasswordScreenState extends State<PasswordScreen> {
                     width: 10,
                   ),
                   Text(
-                    "Set your PIN",
+                    "Confirm your PIN",
                     style: TextStyle(
-                      color: Colors.lightBlue,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                        color: Colors.lightBlue,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
               Padding(
                 padding: EdgeInsets.only(right: 30, top: 10),
                 child: Text(
-                  "To maintain the privacy of your information\nSet your PIN ****",
+                  "To maintain the privacy of your information\nConfirm your PIN ****",
                   style: TextStyle(
                       color: Colors.black,
                       fontSize: 15,
@@ -305,57 +316,67 @@ class _PasswordScreenState extends State<PasswordScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children:
-                      List.generate(4, (index) => buildPinTextField(index)),
+                  List.generate(4, (index) => buildPinTextField(index)),
                 ),
               ),
               Padding(
                 padding: EdgeInsets.only(
-                  top: MediaQuery.of(context).size.height * 0.4,
-                  left: 20,
-                ),
+                    top: MediaQuery.of(context).size.height * 0.4, left: 20),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     ElevatedButton(
                       onPressed: () async {
-                        String enteredPin = _pinControllers
+                        // Confirm PIN and save to shared preferences
+                        String confirmedPin = _pinControllers
                             .map((controller) => controller.text)
                             .join();
 
-                        if (enteredPin.length == 4) {
-                          // Navigate to ConfirmPIN screen with the entered PIN as an argument
-                          Get.to(ConfirmPIN(), arguments: enteredPin);
+                        if (confirmedPin.isNotEmpty) {
+                          // Check if entered PIN matches the previously passed PIN
+                          if (confirmedPin == enteredPin) {
+                            SharedPreferences prefs =
+                            await SharedPreferences.getInstance();
+                            prefs.setString('pin', confirmedPin);
+                            print("PIN saved to SharedPreferences: $confirmedPin");
 
-                        } else {
-                          // Show an error message for invalid PIN length
-                          print("Invalid PIN. Please enter 4 digits.");
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: Text("Error"),
-                                content:
-                                    Text("Incorrect PIN. Please enter 4-digits again."),
-                                actions: [
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      // Close the dialog
-                                      Navigator.pop(context);
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      primary: Colors.red,
+                            // Navigate to EnterPIN and clear the previous routes
+                            Get.offAll(() => EnterPIN());
+                          } else {
+                            // Incorrect PIN, show error message
+                            print("Incorrect PIN. Please try again.");
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: Text("Error"),
+                                  content: Text(
+                                      "Incorrect PIN. Please try again."),
+                                  actions: [
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        // Close the dialog
+                                        Navigator.pop(context);
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        primary: Colors.red,
+                                      ),
+                                      child: Text("OK",
+                                          style:
+                                          TextStyle(color: Colors.white)),
                                     ),
-                                    child: Text("OK",
-                                        style: TextStyle(color: Colors.white)),
-                                  ),
-                                ],
-                              );
-                            },
-                          );
+                                  ],
+                                );
+                              },
+                            );
+                          }
+                        } else {
+                          // Show an error message or handle invalid PIN
+                          print("Please confirm your PIN first.");
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        primary: Colors.green,
+                        primary: Colors.lightBlueAccent,
                         onPrimary: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8.0),
@@ -365,7 +386,7 @@ class _PasswordScreenState extends State<PasswordScreen> {
                       child: Padding(
                         padding: const EdgeInsets.all(12.0),
                         child: Text(
-                          'Continue',
+                          'Confirm PIN',
                           style: TextStyle(fontSize: 16.0),
                         ),
                       ),
@@ -388,22 +409,11 @@ class _PasswordScreenState extends State<PasswordScreen> {
         obscureText: true,
         controller: _pinControllers[index],
         onChanged: (value) {
-          if (value.isEmpty) {
-            // If the field is empty (digit deleted), move focus to the previous field
-            if (index > 0) {
-              FocusScope.of(context).previousFocus();
-            }
-          } else if (value.length == 1) {
-            // If a digit is entered, move focus to the next TextFormField
+          if (value.length == 1) {
+            // Move focus to the next TextFormField
             if (index < 3) {
               FocusScope.of(context).nextFocus();
             }
-          }
-        },
-        onEditingComplete: () {
-          // Called when the user submits the field (e.g., pressing Done on the keyboard)
-          if (index < 3) {
-            FocusScope.of(context).nextFocus();
           }
         },
         decoration: const InputDecoration(
@@ -421,206 +431,4 @@ class _PasswordScreenState extends State<PasswordScreen> {
       ),
     );
   }
-
-  }
-
-
-
-//class PasswordScreen extends StatefulWidget {
-//   @override
-//   _PasswordScreenState createState() => _PasswordScreenState();
-// }
-//
-// class _PasswordScreenState extends State<PasswordScreen> {
-//   List<TextEditingController> _pinControllers = List.generate(4, (index) => TextEditingController());
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       body: SafeArea(
-//         child: SingleChildScrollView(
-//           child: Column(
-//             children: [
-//               SizedBox(
-//                 height: 50,
-//               ),
-//               Row(
-//                 children: [
-//                   SizedBox(
-//                     width: 20,
-//                   ),
-//                   Icon(
-//                     Icons.lock_clock_rounded,
-//                     color: Colors.lightBlue,
-//                   ),
-//                   SizedBox(
-//                     width: 10,
-//                   ),
-//                   Text(
-//                     "Set your PIN",
-//                     style: TextStyle(
-//                         color: Colors.lightBlue,
-//                         fontSize: 20,
-//                         fontWeight: FontWeight.bold),
-//                   ),
-//                 ],
-//               ),
-//               Padding(
-//                 padding: EdgeInsets.only(right: 30, top: 10),
-//                 child: Text(
-//                   "To maintain the privacy of your information\nenter your PIN ****",
-//                   style: TextStyle(
-//                       color: Colors.black,
-//                       fontSize: 15,
-//                       fontWeight: FontWeight.w500),
-//                 ),
-//               ),
-//               SizedBox(
-//                 height: 70,
-//               ),
-//               Padding(
-//                 padding: EdgeInsets.symmetric(horizontal: 13.0),
-//                 child: Row(
-//                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                   children: List.generate(4, (index) => buildPinTextField(index)),
-//                 ),
-//               ),
-//               Padding(
-//                 padding: EdgeInsets.only(
-//                     top: MediaQuery.of(context).size.height * 0.4, left: 20),
-//                 child: Row(
-//                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-//                   children: [
-//                     ElevatedButton(
-//                       onPressed: () {
-//                         String enteredPin = _pinControllers.map((controller) => controller.text).join();
-//                         if (enteredPin.length == 4) {
-//                           // Store the entered PIN in the variable
-//                           print("Entered PIN: $enteredPin");
-//                           Get.off(() => EnterPIN());
-//                         } else {
-//                           // Show an error message or handle invalid PIN
-//                           print("Invalid PIN. Please try again.");
-//                           showDialog(
-//                             context: context,
-//                             builder: (BuildContext context) {
-//                               return AlertDialog(
-//                                 title: Text("Error"),
-//                                 content: Text("Incorrect PIN. Give correct PIN."),
-//                                 actions: [
-//                                   ElevatedButton(
-//                                     onPressed: () {
-//                                       // Close the dialog
-//                                       Navigator.pop(context);
-//                                     },
-//                                     style: ElevatedButton.styleFrom(
-//                                       primary: Colors.red,
-//                                     ),
-//                                     child: Text("OK", style: TextStyle(color: Colors.white)),
-//                                   ),
-//                                 ],
-//                               );
-//                             },
-//                           );
-//                         }
-//                       },
-//                       style: ElevatedButton.styleFrom(
-//                         primary: Colors.green,
-//                         onPrimary: Colors.white,
-//                         shape: RoundedRectangleBorder(
-//                           borderRadius: BorderRadius.circular(8.0),
-//                         ),
-//                         elevation: 3.0,
-//                       ),
-//                       child: Padding(
-//                         padding: const EdgeInsets.all(12.0),
-//                         child: Text(
-//                           'Set your PIN',
-//                           style: TextStyle(fontSize: 16.0),
-//                         ),
-//                       ),
-//                     ),
-//
-//
-//                   ],
-//                 ),
-//               )
-//             ],
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-//
-//   Widget buildPinTextField(int index) {
-//     return SizedBox(
-//       height: 68,
-//       width: 64,
-//       child: TextFormField(
-//         obscureText: true,
-//         controller: _pinControllers[index],
-//         onChanged: (value) {
-//           if (value.isEmpty) {
-//             // If the current field is empty, move to the previous TextFormField
-//             if (index > 0) {
-//               FocusScope.of(context).previousFocus();
-//             }
-//           } else if (value.length == 1) {
-//             // Move focus to the next TextFormField
-//             if (index < 3) {
-//               FocusScope.of(context).nextFocus();
-//             }
-//           }
-//         },
-//         decoration: InputDecoration(
-//           border: OutlineInputBorder(
-//             borderSide: BorderSide(color: Colors.blue),
-//             borderRadius: BorderRadius.all(Radius.circular(10)),
-//           ),
-//           // Add the TextStyle for bold
-//           labelStyle: TextStyle(
-//
-//             fontSize: 40,
-//             fontWeight: FontWeight.bold,
-//             color: Colors.black,
-//           ),
-//         ),
-//         keyboardType: TextInputType.number,
-//         textAlign: TextAlign.center,
-//         inputFormatters: [
-//           LengthLimitingTextInputFormatter(1),
-//           FilteringTextInputFormatter.digitsOnly,
-//         ],
-//         onEditingComplete: () {
-//           // Move to the next TextFormField when "Done" or "Enter" is pressed
-//           if (index < 3) {
-//             FocusScope.of(context).nextFocus();
-//           }
-//         },
-//       ),
-//     );
-//   }
-//
-//
-// }
-// showDialog(
-//                             context: context,
-//                             builder: (BuildContext context) {
-//                               return AlertDialog(
-//                                 title: Text("Error"),
-//                                 content: Text("Please set your PIN first."),
-//                                 actions: [
-//                                   ElevatedButton(
-//                                     onPressed: () {
-//                                       // Close the dialog
-//                                       Navigator.pop(context);
-//                                     },
-//                                     style: ElevatedButton.styleFrom(
-//                                       primary: Colors.red,
-//                                     ),
-//                                     child: Text("OK", style: TextStyle(color: Colors.white)),
-//                                   ),
-//                                 ],
-//                               );
-//                             },
-//                           );
+}

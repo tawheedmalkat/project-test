@@ -8,11 +8,12 @@ import 'UI/screens/pass-code.dart';
 import 'constance/routes.dart';
 
 List<GetPage<dynamic>>? routes = [
-  GetPage(name: AppRoute.start!, page: () => Start()),
+ // GetPage(name: AppRoute.start!, page: () => Start()),
   // Auth
   GetPage(name: AppRoute.signIn!, page: () => LogIn()),
 
   // Home
   GetPage(name: AppRoute.passcode!, page: () => PasswordScreen()),
+  GetPage(name: AppRoute.start!, page: () => ScreenOne()),
 
 ];
