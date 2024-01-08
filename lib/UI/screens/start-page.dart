@@ -100,7 +100,7 @@ class _ScreenOneState extends State<ScreenOne> {
                   ),
                   child: ElevatedButton(
                     onPressed: () {
-                      Get.to(LogIn());
+                      Get.offAll(LogIn());
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xff03A8EA),

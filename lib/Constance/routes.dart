@@ -8,12 +8,21 @@ final DateTime expirationDate = DateTime.fromMillisecondsSinceEpoch(tokenTimesta
 
 
 class AppRoute {
-   static String? start = storedToken != null && tokenTimestamp != null? now.isBefore(expirationDate)? "/start":"/":"/";
+   // static String? start = storedToken != null && tokenTimestamp != null? now.isBefore(expirationDate)? "/start":"/":"/";
   // signIn.
+
+  //static String? passcode = sharedPref?.getString("pin")==null?"/":"/setpasscode";
+
 
   static String? signIn = storedToken != null && tokenTimestamp != null? now.isBefore(expirationDate)? "/login": "/":"/";
 
+
+
   // interface.
-  static String? passcode = storedToken != null && tokenTimestamp != null? now.isBefore(expirationDate)? "/": "/passcode":"/";
+
+
+   // static String? confirmpasscode = sharedPref?.getString("pin")==null?"/confirm":"/";
+
+   static String? enterpasscode = sharedPref?.getString("pin")==null?"/confirm":"/";
 
 }

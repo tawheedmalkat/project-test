@@ -186,6 +186,8 @@ import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:invoportapp/UI/screens/enterPIN.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../Model/UserInfoModel.dart';
 import '../../UI/screens/Home.dart';
 import '../../UI/screens/Interface.dart';
@@ -330,8 +332,16 @@ class SignInControllerImp extends SignInController {
                         TextButton(
                           onPressed: () async {
 
-                            final String token = responseData['user']['token'];
-                            await saveTokenAndNavigate(token, 6); // Save token for 6 hours
+                             final String token = responseData['user']['token'];
+                             await saveTokenAndNavigate(token, 6);
+                             SharedPreferences.getInstance().then((prefs) {
+
+                               prefs.remove('token');
+                             });
+
+                             Get.offAll( Interface());
+
+                             Get.back();// Save token for 6 hours
 
                           },
                           style: TextButton.styleFrom(

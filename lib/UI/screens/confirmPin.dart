@@ -239,6 +239,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:invoportapp/UI/screens/Interface.dart';
+import 'package:invoportapp/UI/screens/login.dart';
+import 'package:invoportapp/UI/screens/pass-code.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'enterPIN.dart';
 
@@ -250,7 +253,7 @@ class ConfirmPIN extends StatefulWidget {
 class _ConfirmPINState extends State<ConfirmPIN> {
   String enteredPin = Get.arguments ?? "";
   List<TextEditingController> _pinControllers =
-  List.generate(4, (index) => TextEditingController());
+      List.generate(4, (index) => TextEditingController());
 
   String savedPin = "";
 
@@ -260,11 +263,9 @@ class _ConfirmPINState extends State<ConfirmPIN> {
     getSavedPin();
   }
 
-
   Future<void> getSavedPin() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     savedPin = prefs.getString('pin') ?? "";
-
   }
 
   @override
@@ -299,9 +300,9 @@ class _ConfirmPINState extends State<ConfirmPIN> {
                 ],
               ),
               Padding(
-                padding: EdgeInsets.only(right: 30, top: 10),
+                padding: EdgeInsets.only(right: 90, left: 20, top: 10),
                 child: Text(
-                  "To maintain the privacy of your information\nConfirm your PIN ****",
+                  "please re-enter your PIN\tConfirm PIN ****",
                   style: TextStyle(
                       color: Colors.black,
                       fontSize: 15,
@@ -316,7 +317,7 @@ class _ConfirmPINState extends State<ConfirmPIN> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children:
-                  List.generate(4, (index) => buildPinTextField(index)),
+                      List.generate(4, (index) => buildPinTextField(index)),
                 ),
               ),
               Padding(
@@ -336,39 +337,76 @@ class _ConfirmPINState extends State<ConfirmPIN> {
                           // Check if entered PIN matches the previously passed PIN
                           if (confirmedPin == enteredPin) {
                             SharedPreferences prefs =
-                            await SharedPreferences.getInstance();
+                                await SharedPreferences.getInstance();
                             prefs.setString('pin', confirmedPin);
-                            print("PIN saved to SharedPreferences: $confirmedPin");
+                            print(
+                                "PIN saved to SharedPreferences: $confirmedPin");
 
                             // Navigate to EnterPIN and clear the previous routes
                             Get.offAll(() => EnterPIN());
                           } else {
                             // Incorrect PIN, show error message
-                            print("Incorrect PIN. Please try again.");
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  title: Text("Error"),
-                                  content: Text(
-                                      "Incorrect PIN. Please try again."),
-                                  actions: [
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        // Close the dialog
-                                        Navigator.pop(context);
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        primary: Colors.red,
+                            if (confirmedPin.length >= 4) {
+                              print("Incorrect PIN. Please try again.");
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: Text("Error"),
+                                    content: Text(
+                                        "The PIN doesn't match.Please try again"),
+                                    actions: [
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          // Close the dialog
+
+
+                                          Get.back();
+
+
+                                          // Access the current Scaffold's context using the key
+
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          primary: Colors.red,
+                                        ),
+                                        child: Text("OK",
+                                            style:
+                                                TextStyle(color: Colors.white)),
                                       ),
-                                      child: Text("OK",
-                                          style:
-                                          TextStyle(color: Colors.white)),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
+                                    ],
+                                  );
+                                },
+                              );
+                            } else {
+                              // Display a message when the PIN has fewer than 4 characters
+                              print("PIN should have at least 4 characters");
+                              showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      title: Text("Error"),
+                                      content: Text(
+                                          "Invalid PIN. the PIN must be 4-digits, try again."),
+                                      actions: [
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            // Close the dialog
+                                            Navigator.pop(context);
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            primary: Colors.red,
+                                          ),
+                                          child: Text("OK",
+                                              style: TextStyle(
+                                                  color: Colors.white)),
+                                        ),
+                                      ],
+                                    );
+                                  });
+
+                              // You can show a dialog or any other UI element to inform the user.
+                            }
                           }
                         } else {
                           // Show an error message or handle invalid PIN
@@ -409,11 +447,22 @@ class _ConfirmPINState extends State<ConfirmPIN> {
         obscureText: true,
         controller: _pinControllers[index],
         onChanged: (value) {
-          if (value.length == 1) {
-            // Move focus to the next TextFormField
+          if (value.isEmpty) {
+            // If the field is empty (digit deleted), move focus to the previous field
+            if (index > 0) {
+              FocusScope.of(context).previousFocus();
+            }
+          } else if (value.length == 1) {
+            // If a digit is entered, move focus to the next TextFormField
             if (index < 3) {
               FocusScope.of(context).nextFocus();
             }
+          }
+        },
+        onEditingComplete: () {
+          // Called when the user submits the field (e.g., pressing Done on the keyboard)
+          if (index < 3) {
+            FocusScope.of(context).nextFocus();
           }
         },
         decoration: const InputDecoration(

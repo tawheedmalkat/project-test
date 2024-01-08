@@ -214,9 +214,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
+import 'package:invoportapp/UI/screens/UserDataScreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'Interface.dart';
+import 'login.dart';
 
 class EnterPIN extends StatefulWidget {
   @override
@@ -264,7 +266,7 @@ class _EnterPINState extends State<EnterPIN> {
               Padding(
                 padding: EdgeInsets.only(right: 30, top: 10),
                 child: Text(
-                  "To maintain the privacy of your information\nenter your PIN ****",
+                  "It's nice to see you again here\nplease enter your PIN ****",
                   style: TextStyle(
                       color: Colors.black,
                       fontSize: 15,
@@ -313,7 +315,7 @@ class _EnterPINState extends State<EnterPIN> {
                           String savedPin = prefs.getString('pin') ?? "";
 
                           if (enteredPin == savedPin) {
-                            Get.to(Interface());
+                            Get.to(UserDataScreen(userModels: [],));
                             // PIN is correct, show success dialog
 
                           } else {
@@ -337,12 +339,16 @@ class _EnterPINState extends State<EnterPIN> {
                                   return AlertDialog(
                                     title: Text("Error"),
                                     content: Text(
-                                        "Incorrect PIN. Please try again."),
+                                        "you entered Incorrect PIN for 3 times. Please log in again."),
                                     actions: [
                                       ElevatedButton(
                                         onPressed: () {
+                                          SharedPreferences.getInstance().then((prefs) {
+                                            prefs.remove('pin');
+                                            prefs.remove('token');
+                                          });
                                           // Close the dialog
-                                          Navigator.pop(context);
+                                         Get.to(LogIn());
                                         },
                                         style: ElevatedButton.styleFrom(
                                           primary: Colors.red,
@@ -365,7 +371,7 @@ class _EnterPINState extends State<EnterPIN> {
                             builder: (BuildContext context) {
                               return AlertDialog(
                                 title: Text("Invalid PIN",style: TextStyle(color: Colors.red),),
-                                content: Text("Invalid PIN. Please try again."),
+                                content: Text("Invalid PIN. the PIN must be 4-digits, try again."),
                                 actions: [
                                   ElevatedButton(
                                     onPressed: () {
@@ -394,7 +400,7 @@ class _EnterPINState extends State<EnterPIN> {
                       child: Padding(
                         padding: const EdgeInsets.all(12.0),
                         child: Text(
-                          'Enter your PIN',
+                          'Submit',
                           style: TextStyle(fontSize: 16.0),
                         ),
                       ),
@@ -416,13 +422,23 @@ class _EnterPINState extends State<EnterPIN> {
       child: TextFormField(
         obscureText: true,
         controller: _pinControllers[index],
-        autofocus: index == 0,  // Autofocus on the first field
         onChanged: (value) {
-          if (value.length == 1) {
-            // Move focus to the next TextFormField
+          if (value.isEmpty) {
+            // If the field is empty (digit deleted), move focus to the previous field
+            if (index > 0) {
+              FocusScope.of(context).previousFocus();
+            }
+          } else if (value.length == 1) {
+            // If a digit is entered, move focus to the next TextFormField
             if (index < 3) {
               FocusScope.of(context).nextFocus();
             }
+          }
+        },
+        onEditingComplete: () {
+          // Called when the user submits the field (e.g., pressing Done on the keyboard)
+          if (index < 3) {
+            FocusScope.of(context).nextFocus();
           }
         },
         decoration: const InputDecoration(
